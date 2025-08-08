@@ -120,12 +120,14 @@ omit_all_left([P]) ->
 omit_all_left([P | Ps]) ->
   omit_left(P, omit_all_left(Ps)).
 
+%% Parse zero or more occurrences of a pattern
+-spec zero_or_more(parser()) -> parser().
 zero_or_more(Parser) ->
   fun(Input) when is_binary(Input) ->
      case run_parser(Parser, Input) of
        {ok, Val, Rest} ->
          case run_parser(zero_or_more(Parser), Rest) of
-           {ok, Values, FinalRest} ->
+           {ok, Values, FinalRest} when is_list(Values) ->
              {ok, [Val | Values], FinalRest}
          end;
        _ ->
@@ -133,12 +135,14 @@ zero_or_more(Parser) ->
      end
   end.
 
+%% Parse one or more occurrences of a pattern
+-spec one_or_more(parser()) -> parser().
 one_or_more(Parser) ->
   fun(Input) when is_binary(Input) ->
      case run_parser(Parser, Input) of
        {ok, Val, Rest} ->
          case run_parser(zero_or_more(Parser), Rest) of
-           {ok, Values, FinalRest} ->
+           {ok, Values, FinalRest} when is_list(Values) ->
              {ok, [Val | Values], FinalRest}
          end;
        _ ->
@@ -146,6 +150,8 @@ one_or_more(Parser) ->
      end
   end.
 
+%% Parse items separated by a separator
+-spec sep_by(parser(), parser()) -> parser().
 sep_by(Parser, Sep) ->
   fun(Input) when is_binary(Input) ->
      case run_parser(Parser, Input) of
@@ -153,7 +159,7 @@ sep_by(Parser, Sep) ->
          case run_parser(zero_or_more(omit_left(Sep, Parser)),
                          Rest)
          of
-           {ok, Values, FinalRest} ->
+           {ok, Values, FinalRest} when is_list(Values) ->
              {ok, [Val | Values], FinalRest}
          end;
        _ ->
@@ -180,8 +186,10 @@ seq_reduce([P | Ps], Acc, Func) ->
           seq_reduce(Ps, Func(Acc, Val), Func)
        end).
 
+%% Creates a parser that is evaluated lazily
+%% Useful for recursive parser definitions
+-spec lazy(fun(() -> parser())) -> parser().
 lazy(Func) ->
   fun(Input) when is_binary(Input) ->
-     P = Func(),
-     run_parser(P, Input)
+     run_parser(Func(), Input)
   end.

@@ -13,9 +13,7 @@
          trim_ws/0]).
 
 %% Types
--type parser() ::
-  fun((binary()) ->
-        {ok, any(), binary()} | {error, any(), binary()}).
+-type parser() :: core:parser().
 
 %% Match an exact string
 -spec satisfy(binary()) -> parser().
@@ -31,6 +29,9 @@ satisfy(Str) when is_binary(Str) ->
      end
   end.
 
+%% Remove leading whitespace from binary
+%% Whitespace includes space, tab, CR, and LF
+-spec trim_leading_ws(binary()) -> binary().
 trim_leading_ws(<<C, Rest/binary>>)
   when C == 32
        orelse C == $\t
@@ -40,11 +41,16 @@ trim_leading_ws(<<C, Rest/binary>>)
 trim_leading_ws(Rest) ->
   Rest.
 
+%% Parser that consumes leading whitespace
+-spec trim_ws() -> parser().
 trim_ws() ->
   fun(Input) when is_binary(Input) ->
      {ok, "", trim_leading_ws(Input)}
   end.
 
+%% Wraps a parser with whitespace handling
+%% The resulting parser will consume whitespace before and after the main parser
+-spec symbol(core:parser()) -> parser().
 symbol(Parser) ->
   core:omit_left(trim_ws(),
                  core:omit_right(Parser, trim_ws())).

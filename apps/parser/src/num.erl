@@ -13,9 +13,7 @@
          number_parser/0]).
 
 %% Types
--type parser() ::
-  fun((binary()) ->
-        {ok, any(), binary()} | {error, any(), binary()}).
+-type parser() :: core:parser().
 
 %% Type specifications
 -spec digits_parser() -> parser().
@@ -56,10 +54,10 @@ int_parser() ->
   core:fmap(
     core:seq_reduce([sign_parser(), digits_parser()],
                     <<>>,
-                    fun(Acc, Val) ->
+                    fun(Acc, Val) when is_binary(Acc), is_binary(Val) ->
                        <<Acc/binary, Val/binary>>
                     end),
-    fun(X) ->
+    fun(X) when is_binary(X) ->
        binary_to_integer(X)
     end).
 
@@ -70,10 +68,10 @@ float_parser() ->
                      str:satisfy(<<".">>),
                      digits_parser()],
                     <<>>,
-                    fun(Acc, Val) ->
+                    fun(Acc, Val) when is_binary(Acc), is_binary(Val) ->
                        <<Acc/binary, Val/binary>>
                     end),
-    fun(X) ->
+    fun(X) when is_binary(X) ->
        binary_to_float(X)
     end).
 

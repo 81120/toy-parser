@@ -23,14 +23,23 @@
          true_parser/0]).
 
 %% Function specifications
+%% Parser for JSON null value
 -spec null_parser() -> core:parser().
+%% Parser for JSON true value
 -spec true_parser() -> core:parser().
+%% Parser for JSON false value
 -spec false_parser() -> core:parser().
+%% Parser for JSON boolean values (true or false)
 -spec boolean_parser() -> core:parser().
+%% Parser for JSON number values (converts to Erlang number)
 -spec number_parser() -> core:parser().
+%% Parser for JSON string values (with proper escaping)
 -spec string_parser() -> core:parser().
+%% Parser for JSON arrays
 -spec array_parser() -> core:parser().
+%% Parser for JSON objects
 -spec object_parser() -> core:parser().
+%% Parser for any JSON value
 -spec json_parser() -> core:parser().
 null_parser() ->
   core:fmap(
