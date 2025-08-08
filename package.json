@@ -1,0 +1,40 @@
+{
+  "name": "parsec",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "node ./dist/index.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "typescript": "^5.8.2"
+  },
+  "functions": [
+    {
+      "name": "parse",
+      "description": "Parses a string input into a structured format.",
+      "parameters": [
+        {
+          "name": "input",
+          "type": "string",
+          "description": "The input string to parse."
+        }
+      ],
+      "returns": {
+        "type": "object",
+        "description": "The parsed output."
+      }
+    },
+    "TsBuildIn",
+    20,
+    {
+      "enable": true
+    },
+    {
+      "extra": null
+    }
+  ]
+}
