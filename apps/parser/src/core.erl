@@ -1,5 +1,18 @@
 -module(core).
 
+%% Core module implementing parser combinators
+%% This module provides the fundamental building blocks for creating parsers:
+%% * Monadic operations (bind, pure)
+%% * Alternatives and choice
+%% * Repetition (zero_or_more, one_or_more)
+%% * Sequences and combinations
+
+-type parser() ::
+  fun((binary()) ->
+        {ok, any(), binary()} | {error, any(), binary()}).
+
+-export_type([parser/0]).
+
 -export([alternative/1,
          alternative/2,
          bind/2,
@@ -17,19 +30,30 @@
          seq_reduce/3,
          zero_or_more/1]).
 
+%% Run a parser with input
+-spec run_parser(parser(), binary()) ->
+                  {ok, term(), binary()} | {error, term(), binary()}.
 run_parser(Parser, Input) when is_binary(Input) ->
   Parser(Input).
 
+%% Create a parser that always succeeds with a value
+-spec pure(Val :: term()) -> parser().
 pure(Val) ->
   fun(Input) when is_binary(Input) ->
      {ok, Val, Input}
   end.
 
+%% Create a parser that always fails with an error
+-spec fail(Err :: binary()) -> parser().
 fail(Err) ->
   fun(Input) when is_binary(Input) ->
      {error, Err, Input}
   end.
 
+%% Monadic bind operation
+%% Creates a new parser by chaining the result of one parser to another
+-spec bind(parser(), fun((term()) -> parser())) ->
+            parser().
 bind(Parser, Func) ->
   fun(Input) when is_binary(Input) ->
      case run_parser(Parser, Input) of
@@ -40,12 +64,18 @@ bind(Parser, Func) ->
      end
   end.
 
+%% Functor mapping operation
+%% Applies a function to the result of a parser if it succeeds
+-spec fmap(parser(), fun((term()) -> term())) ->
+            parser().
 fmap(Parser, Func) ->
   bind(Parser,
        fun(Val) ->
           pure(Func(Val))
        end).
 
+%% Tries multiple parsers in sequence until one succeeds
+-spec alternative([parser()]) -> parser().
 alternative([]) ->
   fail(<<"No alternatives">>);
 alternative([P]) ->
@@ -53,6 +83,8 @@ alternative([P]) ->
 alternative([P | Ps]) ->
   alternative(P, alternative(Ps)).
 
+%% Tries one parser, if it fails tries the second parser
+-spec alternative(parser(), parser()) -> parser().
 alternative(Pa, Pb) ->
   fun(Input) when is_binary(Input) ->
      case run_parser(Pa, Input) of
@@ -63,18 +95,24 @@ alternative(Pa, Pb) ->
      end
   end.
 
+%% Runs two parsers in sequence, discarding the result of the first
+-spec omit_left(parser(), parser()) -> parser().
 omit_left(Pa, Pb) ->
   bind(Pa,
        fun(_) ->
           Pb
        end).
 
+%% Runs two parsers in sequence, discarding the result of the second
+-spec omit_right(parser(), parser()) -> parser().
 omit_right(Pa, Pb) ->
   bind(Pa,
        fun(Res) ->
           omit_left(Pb, pure(Res))
        end).
 
+%% Runs multiple parsers in sequence, keeping only the last result
+-spec omit_all_left([parser()]) -> parser().
 omit_all_left([]) ->
   fail(<<"No parsers">>);
 omit_all_left([P]) ->

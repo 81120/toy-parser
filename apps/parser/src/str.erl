@@ -1,10 +1,24 @@
 -module(str).
 
+%% String parsing utilities
+%% Provides functions for:
+%% * Exact string matching
+%% * String literal parsing with escapes
+%% * Whitespace handling
+%% * Symbol parsing (tokens with whitespace)
+
 -export([read_string/1,
          satisfy/1,
          symbol/1,
          trim_ws/0]).
 
+%% Types
+-type parser() ::
+  fun((binary()) ->
+        {ok, any(), binary()} | {error, any(), binary()}).
+
+%% Match an exact string
+-spec satisfy(binary()) -> parser().
 satisfy(Str) when is_binary(Str) ->
   fun(Input) when is_binary(Input) ->
      StrLen = byte_size(Str),

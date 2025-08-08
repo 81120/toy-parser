@@ -1,4 +1,16 @@
+%% JSON parser implementation using parser combinators
 -module(json).
+
+%% Types
+-type json_value() ::
+  {null, binary()} |
+  {boolean, boolean()} |
+  {number, number()} |
+  {string, binary()} |
+  {array, [json_value()]} |
+  {object, [{binary(), json_value()}]}.
+
+-export_type([json_value/0]).
 
 -export([array_parser/0,
          boolean_parser/0,
@@ -10,6 +22,16 @@
          string_parser/0,
          true_parser/0]).
 
+%% Function specifications
+-spec null_parser() -> core:parser().
+-spec true_parser() -> core:parser().
+-spec false_parser() -> core:parser().
+-spec boolean_parser() -> core:parser().
+-spec number_parser() -> core:parser().
+-spec string_parser() -> core:parser().
+-spec array_parser() -> core:parser().
+-spec object_parser() -> core:parser().
+-spec json_parser() -> core:parser().
 null_parser() ->
   core:fmap(
     str:symbol(
